@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Selera Kampung | Staff Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="staffPage">
+  <div class="pageShell">
+    <header class="dashboardHero">
+      <div>
+        <p class="eyebrow">Kitchen control</p>
+        <h1>Selera Kampung staff dashboard</h1>
+        <p class="heroText">Track incoming dine-in orders, update preparation progress, and keep table service moving smoothly.</p>
+      </div>
+      <div class="dashboardSummary">
+        <button type="button" id="liveQueueToggle" class="summaryChip summaryControl active">
+          <span class="summaryTitle">Live queue</span>
+          <span id="liveQueueValue" class="summaryValue">0 active</span>
+        </button>
+        <button type="button" id="sortModeToggle" class="summaryChip summaryControl">
+          <span class="summaryTitle">Sequence order</span>
+          <span id="sortModeValue" class="summaryValue">Tap for newest first</span>
+        </button>
+        <button type="button" id="readyHelperToggle" class="summaryChip summaryControl active">
+          <span class="summaryTitle">One-click ready status</span>
+          <span id="readyHelperValue" class="summaryValue">Highlighting active</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="dashboardLayout">
+      <section class="dashboardPanel">
+        <div class="sectionHeading">
+          <div>
+            <p class="eyebrow">Incoming orders</p>
+            <h2>Restaurant queue</h2>
+          </div>
+        </div>
+        <div id="ordersList" class="ordersGrid"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="staff.js"></script>
+</body>
+</html>

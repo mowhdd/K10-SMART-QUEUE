@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Selera Kampung | Order</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="customerPage">
+  <div class="pageShell">
+    <header class="heroSection">
+      <div class="heroCopy">
+        <p class="eyebrow">Selera Kampung</p>
+        <h1>Fresh Malay comfort food, made for every table.</h1>
+        <p class="heroText">
+          Pick your favourites, send the order straight to the kitchen, and track when it is ready to serve.
+        </p>
+        <div class="heroMeta">
+          <span>Halal kitchen</span>
+          <span>Fast queue updates</span>
+          <span>Dine-in ready</span>
+        </div>
+      </div>
+      <aside class="heroPanel">
+        <p class="heroPanelLabel">Today's popular picks</p>
+        <ul class="heroHighlights">
+          <li>Nasi Goreng Pattaya</li>
+          <li>Mee Goreng Mamak</li>
+          <li>Satay Ayam</li>
+          <li>Teh Tarik Ais</li>
+        </ul>
+      </aside>
+    </header>
+
+    <main class="customerLayout">
+      <section class="menuSection">
+        <div class="sectionHeading">
+          <div>
+            <p class="eyebrow">Browse menu</p>
+            <h2>Classic Malay favourites</h2>
+          </div>
+          <div id="categoryFilters" class="categoryFilters" aria-label="Menu categories"></div>
+        </div>
+
+        <div id="menuGrid" class="menuGrid" aria-live="polite"></div>
+      </section>
+
+      <aside class="orderSection">
+        <div class="orderPanel">
+          <div class="panelHeading">
+            <p class="eyebrow">Your order</p>
+            <h2>Ready to send</h2>
+          </div>
+
+          <div id="selectedItemCard" class="selectedItemCard empty">
+            <p class="selectedPlaceholder">Choose a menu item to see it here.</p>
+          </div>
+
+          <form id="orderForm" class="orderForm">
+            <label for="tableNo">Table Number</label>
+            <input type="text" id="tableNo" placeholder="Example: 5" required>
+
+            <label for="quantity">Quantity</label>
+            <input type="number" id="quantity" min="1" value="1" required>
+
+            <input type="hidden" id="foodName" required>
+
+            <button type="submit" class="primaryButton">Submit Order</button>
+          </form>
+
+          <div id="orderStatus" class="statusBox hidden">
+            <div class="statusHeader">
+              <p class="eyebrow">Live status</p>
+              <h3>Your order status</h3>
+            </div>
+            <p id="orderNumberText" class="queueNumber hidden"></p>
+            <p id="orderFoodText" class="orderStatusFood hidden"></p>
+            <p id="statusText" class="statusPill">Waiting...</p>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script type="module" src="customer.js"></script>
+</body>
+</html>
