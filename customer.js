@@ -16,7 +16,7 @@ const menuItems = [
     price: "RM 12"
   },
   {
-    name: "Nasi Lemak Ayam Goreng",
+    name: "Nasi Lemak Ayam ",
     category: "Rice",
     description: "Coconut rice, crispy fried chicken, sambal, egg, and peanuts.",
     price: "RM 14"
