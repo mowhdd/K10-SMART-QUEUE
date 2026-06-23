@@ -10,7 +10,8 @@ import {
   query,
   orderBy,
   serverTimestamp,
-  runTransaction
+  runTransaction,
+  where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -36,5 +37,6 @@ export {
   query,
   orderBy,
   serverTimestamp,
-  runTransaction
+  runTransaction,
+  where
 };

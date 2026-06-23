@@ -316,7 +316,10 @@ p {
 .menuCard,
 .selectedItemCard,
 .orderCard,
-.emptyState {
+.emptyState,
+.draftOrderItem,
+.submittedOrderCard,
+.orderStackPanel {
   border-radius: var(--radius-lg);
   border: 1px solid var(--line);
   background: var(--surface-strong);
@@ -351,7 +354,9 @@ p {
 .selectedItemCard h3,
 .orderCard h3,
 .orderDish h4,
-.emptyState h3 {
+.emptyState h3,
+.draftOrderItem h4,
+.submittedOrderCard h4 {
   margin-top: 14px;
 }
 
@@ -364,7 +369,9 @@ p {
 .menuFooter,
 .selectedTop,
 .orderCardTop,
-.orderMetaGrid {
+.orderMetaGrid,
+.submittedOrderTop,
+.draftOrderItem {
   display: flex;
   justify-content: space-between;
   gap: 12px;
@@ -388,7 +395,8 @@ p {
   margin: 20px 0 22px;
 }
 
-.selectedItemCard.empty {
+.selectedItemCard.empty,
+.draftOrderList.emptyStack {
   display: grid;
   place-items: center;
   min-height: 156px;
@@ -409,6 +417,45 @@ p {
 .orderForm {
   display: grid;
   gap: 12px;
+}
+
+.orderStackPanel {
+  margin-top: 22px;
+  padding: 20px;
+}
+
+.draftOrderList,
+.submittedOrdersList {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.draftOrderItem,
+.submittedOrderCard {
+  padding: 16px 18px;
+}
+
+.draftOrderMeta,
+.statusSummary {
+  margin: 4px 0 0;
+  color: var(--text-soft);
+}
+
+.ghostButton {
+  appearance: none;
+  border: 1px solid rgba(200, 92, 44, 0.18);
+  background: rgba(255, 250, 244, 0.92);
+  color: var(--brand-deep);
+  border-radius: 999px;
+  padding: 10px 14px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondaryButton {
+  margin-top: 16px;
 }
 
 label {
@@ -470,7 +517,7 @@ input:focus {
 }
 
 .queueNumber {
-  margin: 14px 0 0;
+  margin: 0;
   font-weight: 800;
   color: var(--brand-deep);
 }
@@ -484,7 +531,7 @@ input:focus {
 
 .statusPill {
   display: inline-flex;
-  margin: 16px 0 0;
+  margin: 0;
   padding: 10px 16px;
   border-radius: 999px;
   font-weight: 800;
@@ -607,5 +654,11 @@ input:focus {
   .filterChip {
     width: 100%;
     justify-content: center;
+  }
+
+  .draftOrderItem,
+  .submittedOrderTop {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

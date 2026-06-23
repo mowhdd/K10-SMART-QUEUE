@@ -5,7 +5,9 @@ import {
   onSnapshot,
   doc,
   serverTimestamp,
-  runTransaction
+  runTransaction,
+  query,
+  where
 } from "./firebase.js";
 
 const menuItems = [
@@ -16,7 +18,7 @@ const menuItems = [
     price: "RM 12"
   },
   {
-    name: "Nasi Lemak Ayam ",
+    name: "Nasi Lemak Ayam",
     category: "Rice",
     description: "Coconut rice, crispy fried chicken, sambal, egg, and peanuts.",
     price: "RM 14"
@@ -73,18 +75,35 @@ const menuItems = [
 
 const orderForm = document.getElementById("orderForm");
 const orderStatus = document.getElementById("orderStatus");
-const orderNumberText = document.getElementById("orderNumberText");
-const orderFoodText = document.getElementById("orderFoodText");
-const statusText = document.getElementById("statusText");
 const menuGrid = document.getElementById("menuGrid");
 const categoryFilters = document.getElementById("categoryFilters");
 const selectedItemCard = document.getElementById("selectedItemCard");
 const foodNameInput = document.getElementById("foodName");
+const draftOrderList = document.getElementById("draftOrderList");
+const submittedOrdersList = document.getElementById("submittedOrdersList");
+const submitAllOrdersButton = document.getElementById("submitAllOrdersButton");
 
-let currentOrderId = null;
-let readyNotified = false;
 let selectedCategory = "All";
 let selectedItemName = "";
+let draftOrders = [];
+let submittedOrders = [];
+let readyNotifications = new Set();
+let customerOrderUnsubscribe = null;
+
+const customerSessionId = getCustomerSessionId();
+
+function getCustomerSessionId() {
+  const storageKey = "selera-kampung-customer-session";
+  const existingSessionId = window.localStorage.getItem(storageKey);
+
+  if (existingSessionId) {
+    return existingSessionId;
+  }
+
+  const nextSessionId = `customer-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  window.localStorage.setItem(storageKey, nextSessionId);
+  return nextSessionId;
+}
 
 function getOrderDateKey() {
   return new Intl.DateTimeFormat("en-CA", {
@@ -95,7 +114,7 @@ function getOrderDateKey() {
   }).format(new Date());
 }
 
-async function getNextDailySequence(orderDateKey) {
+async function reserveDailySequenceRange(orderDateKey, orderCount) {
   const counterRef = doc(db, "dailyCounters", orderDateKey);
 
   return runTransaction(db, async (transaction) => {
@@ -103,18 +122,19 @@ async function getNextDailySequence(orderDateKey) {
     const lastSequence = counterSnapshot.exists()
       ? Number(counterSnapshot.data().lastSequence || 0)
       : 0;
-    const nextSequence = lastSequence + 1;
+    const firstSequence = lastSequence + 1;
+    const lastReservedSequence = lastSequence + orderCount;
 
     transaction.set(
       counterRef,
       {
-        lastSequence: nextSequence,
+        lastSequence: lastReservedSequence,
         updatedAt: serverTimestamp()
       },
       { merge: true }
     );
 
-    return nextSequence;
+    return firstSequence;
   });
 }
 
@@ -198,46 +218,7 @@ function renderSelectedItem(item) {
   `;
 }
 
-orderForm.addEventListener("submit", async function(event) {
-  event.preventDefault();
-
-  const tableNo = document.getElementById("tableNo").value.trim();
-  const foodName = foodNameInput.value;
-  const quantity = document.getElementById("quantity").value;
-
-  if (!foodName) {
-    alert("Please choose a menu item before submitting your order.");
-    return;
-  }
-
-  const orderDateKey = getOrderDateKey();
-  const dailySequence = await getNextDailySequence(orderDateKey);
-
-  const orderData = {
-    tableNo: tableNo,
-    foodName: foodName,
-    quantity: Number(quantity),
-    status: "Preparing",
-    orderDateKey: orderDateKey,
-    dailySequence: dailySequence,
-    createdAt: serverTimestamp()
-  };
-
-  const docRef = await addDoc(collection(db, "orders"), orderData);
-
-  currentOrderId = docRef.id;
-  readyNotified = false;
-
-  orderStatus.classList.remove("hidden");
-  orderNumberText.classList.remove("hidden");
-  orderNumberText.textContent = `Order #${dailySequence}`;
-  orderFoodText.classList.remove("hidden");
-  orderFoodText.textContent = foodName;
-  statusText.textContent = "Preparing";
-  statusText.className = "statusPill preparingPill";
-
-  listenToOrderStatus(currentOrderId);
-
+function resetMenuSelection() {
   orderForm.reset();
   document.getElementById("quantity").value = 1;
   selectedItemName = "";
@@ -245,32 +226,183 @@ orderForm.addEventListener("submit", async function(event) {
   renderMenuItems();
   renderSelectedItem(null);
 }
-);
 
-function listenToOrderStatus(orderId) {
-  const orderRef = doc(db, "orders", orderId);
+function renderDraftOrders() {
+  if (draftOrders.length === 0) {
+    draftOrderList.className = "draftOrderList emptyStack";
+    draftOrderList.innerHTML = `<p class="selectedPlaceholder">No dishes added yet.</p>`;
+    submitAllOrdersButton.disabled = true;
+    return;
+  }
 
-  onSnapshot(orderRef, function(snapshot) {
-    if (snapshot.exists()) {
-      const order = snapshot.data();
+  draftOrderList.className = "draftOrderList";
+  draftOrderList.innerHTML = draftOrders
+    .map(
+      (order, index) => `
+        <article class="draftOrderItem">
+          <div>
+            <p class="metaLabel">Item ${index + 1}</p>
+            <h4>${order.foodName}</h4>
+            <p class="draftOrderMeta">Quantity ${order.quantity}</p>
+          </div>
+          <button type="button" class="ghostButton removeDraftButton" data-index="${index}">Remove</button>
+        </article>
+      `
+    )
+    .join("");
 
-      orderNumberText.classList.remove("hidden");
-      orderNumberText.textContent = order.dailySequence
-        ? `Order #${order.dailySequence}`
-        : "Order in queue";
-      orderFoodText.classList.remove("hidden");
-      orderFoodText.textContent = order.foodName || "Food order";
-      statusText.textContent = order.status;
-      statusText.className = `statusPill ${order.status === "Ready to Serve" ? "readyPill" : "preparingPill"}`;
+  submitAllOrdersButton.disabled = false;
 
-      if (order.status === "Ready to Serve" && readyNotified === false) {
-        readyNotified = true;
-        alert("Your food is ready to serve! Please collect your order at the counter.");
-      }
-    }
+  draftOrderList.querySelectorAll(".removeDraftButton").forEach((button) => {
+    button.addEventListener("click", () => {
+      const index = Number(button.dataset.index);
+      draftOrders.splice(index, 1);
+      renderDraftOrders();
+    });
   });
 }
+
+function renderSubmittedOrders() {
+  const sortedSubmittedOrders = [...submittedOrders].sort((left, right) => {
+    const leftDate = left.orderDateKey || "";
+    const rightDate = right.orderDateKey || "";
+
+    if (leftDate !== rightDate) {
+      return rightDate.localeCompare(leftDate);
+    }
+
+    const leftSequence = Number(left.dailySequence || 0);
+    const rightSequence = Number(right.dailySequence || 0);
+
+    if (leftSequence !== rightSequence) {
+      return leftSequence - rightSequence;
+    }
+
+    const leftCreatedAt = left.createdAt?.seconds || 0;
+    const rightCreatedAt = right.createdAt?.seconds || 0;
+    return leftCreatedAt - rightCreatedAt;
+  });
+
+  if (sortedSubmittedOrders.length === 0) {
+    orderStatus.classList.add("hidden");
+    submittedOrdersList.innerHTML = "";
+    return;
+  }
+
+  orderStatus.classList.remove("hidden");
+  submittedOrdersList.innerHTML = sortedSubmittedOrders
+    .map((order) => {
+      const statusClass = order.status === "Ready to Serve" ? "readyPill" : "preparingPill";
+      const queueNumber = order.dailySequence ? `Order #${order.dailySequence}` : "Order in queue";
+
+      return `
+        <article class="submittedOrderCard">
+          <div class="submittedOrderTop">
+            <div>
+              <p class="queueNumber">${queueNumber}</p>
+              <h4>${order.foodName}</h4>
+            </div>
+            <span class="statusPill ${statusClass}">${order.status}</span>
+          </div>
+          <p class="draftOrderMeta">Quantity ${order.quantity}</p>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function subscribeToCustomerOrders() {
+  if (customerOrderUnsubscribe) {
+    customerOrderUnsubscribe();
+  }
+
+  const customerOrdersQuery = query(
+    collection(db, "orders"),
+    where("customerSessionId", "==", customerSessionId)
+  );
+
+  customerOrderUnsubscribe = onSnapshot(customerOrdersQuery, (snapshot) => {
+    submittedOrders = snapshot.docs.map((documentData) => ({
+      id: documentData.id,
+      ...documentData.data()
+    }));
+
+    submittedOrders.forEach((order) => {
+      if (order.status === "Ready to Serve" && !readyNotifications.has(order.id)) {
+        readyNotifications.add(order.id);
+        alert(`${order.foodName} is ready to serve! Please collect your order at the counter.`);
+      }
+    });
+
+    renderSubmittedOrders();
+  });
+}
+
+orderForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+
+  const foodName = foodNameInput.value;
+  const quantity = Number(document.getElementById("quantity").value);
+
+  if (!foodName) {
+    alert("Please choose a menu item before adding it to your order.");
+    return;
+  }
+
+  if (!quantity || quantity < 1) {
+    alert("Please enter a valid quantity.");
+    return;
+  }
+
+  draftOrders.push({
+    foodName,
+    quantity
+  });
+
+  renderDraftOrders();
+  resetMenuSelection();
+});
+
+submitAllOrdersButton.addEventListener("click", async () => {
+  if (draftOrders.length === 0) {
+    return;
+  }
+
+  const orderDateKey = getOrderDateKey();
+  const firstSequence = await reserveDailySequenceRange(orderDateKey, draftOrders.length);
+  const ordersToSubmit = [...draftOrders];
+
+  submitAllOrdersButton.disabled = true;
+  submitAllOrdersButton.textContent = "Sending Order...";
+
+  try {
+    await Promise.all(
+      ordersToSubmit.map((draftOrder, index) => {
+        const orderData = {
+          foodName: draftOrder.foodName,
+          quantity: Number(draftOrder.quantity),
+          status: "Preparing",
+          orderDateKey,
+          dailySequence: firstSequence + index,
+          customerSessionId,
+          createdAt: serverTimestamp()
+        };
+
+        return addDoc(collection(db, "orders"), orderData);
+      })
+    );
+
+    draftOrders = [];
+    renderDraftOrders();
+    resetMenuSelection();
+  } finally {
+    submitAllOrdersButton.textContent = "Finish Order";
+    submitAllOrdersButton.disabled = draftOrders.length === 0;
+  }
+});
 
 renderCategoryFilters();
 renderMenuItems();
 renderSelectedItem(null);
+renderDraftOrders();
+subscribeToCustomerOrders();
