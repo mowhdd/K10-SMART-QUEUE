@@ -9,65 +9,49 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-
-<div id="mobileOrderPrompt" class="mobileOrderPrompt" aria-live="polite" aria-hidden="true">
-  <span>Order selected</span>
-  <button type="button" id="mobileOrderScrollButton">Scroll down</button>
-</div>
-
-<script>
-  const orderForm = document.getElementById("orderForm");
-  const mobileOrderPrompt = document.getElementById("mobileOrderPrompt");
-  const mobileOrderScrollButton = document.getElementById("mobileOrderScrollButton");
-  const orderSection = document.querySelector(".orderSection");
-  let promptTimer;
-
-  function showMobileOrderPrompt() {
-    if (!window.matchMedia("(max-width: 640px)").matches) return;
-
-    clearTimeout(promptTimer);
-    mobileOrderPrompt.classList.add("isVisible");
-    mobileOrderPrompt.setAttribute("aria-hidden", "false");
-
-    promptTimer = window.setTimeout(() => {
-      mobileOrderPrompt.classList.remove("isVisible");
-      mobileOrderPrompt.setAttribute("aria-hidden", "true");
-    }, 5000);
-  }
-
-  orderForm?.addEventListener("submit", () => {
-    window.setTimeout(showMobileOrderPrompt, 80);
-  });
-
-  mobileOrderScrollButton?.addEventListener("click", () => {
-    clearTimeout(promptTimer);
-    mobileOrderPrompt.classList.remove("isVisible");
-    mobileOrderPrompt.setAttribute("aria-hidden", "true");
-
-    orderSection?.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
-  });
-</script>
-
 <body class="customerPage">
+  <div id="mobileOrderPrompt" class="mobileOrderPrompt" aria-live="polite" aria-hidden="true">
+    <span>Added to cart</span>
+    <button type="button" id="mobileOrderScrollButton">View cart</button>
+  </div>
+
+  <div id="itemModal" class="itemModal hidden" aria-hidden="true">
+    <div class="itemModalBackdrop" data-close-modal="true"></div>
+    <div class="itemModalDialog" role="dialog" aria-modal="true" aria-labelledby="itemModalTitle">
+      <button type="button" id="closeItemModalButton" class="modalCloseButton" aria-label="Close item details">X</button>
+      <p class="eyebrow">Customize order</p>
+      <h3 id="itemModalTitle">Selected item</h3>
+      <p id="itemModalDescription" class="heroText"></p>
+      <p id="itemModalPrice" class="queueNumber"></p>
+
+      <form id="itemModalForm" class="orderForm">
+        <label for="modalQuantity">Quantity</label>
+        <input type="number" id="modalQuantity" min="1" value="1" required>
+
+        <label for="modalRemarks">Remarks</label>
+        <textarea id="modalRemarks" rows="4" placeholder="Example: no onions, extra spicy"></textarea>
+
+        <button type="submit" class="primaryButton">Add To Cart</button>
+      </form>
+    </div>
+  </div>
+
   <div class="pageShell">
     <header class="heroSection">
       <div class="heroCopy">
         <p class="eyebrow">Selera Kampung</p>
-        <h1>Fresh Malay Comfort Food, Ready Whenever You Want Another Round.</h1>
+        <h1>Fresh Malay comfort food, ready whenever you want another round.</h1>
         <p class="heroText">
-          Build your order, send several dishes together, and keep track of every item you have already placed.
+          Pick a dish, customize it in one quick popup, and confirm your cart when you are ready.
         </p>
         <div class="heroMeta">
-          <span>Halal Kitchen</span>
-          <span>Multi-Item Ordering</span>
-          <span>Live Queue Updates</span>
+          <span>Halal kitchen</span>
+          <span>Popup item customizer</span>
+          <span>Live queue updates</span>
         </div>
       </div>
       <aside class="heroPanel">
-        <p class="heroPanelLabel">Today's Popular Picks</p>
+        <p class="heroPanelLabel">Today's popular picks</p>
         <ul class="heroHighlights">
           <li>Nasi Goreng Pattaya</li>
           <li>Mee Goreng Mamak</li>
@@ -93,32 +77,19 @@
       <aside class="orderSection">
         <div class="orderPanel">
           <div class="panelHeading">
-            <p class="eyebrow">Your order</p>
-            <h2>Build your meal</h2>
+            <p class="eyebrow">Your cart</p>
+            <h2>Review before checkout</h2>
           </div>
-
-          <div id="selectedItemCard" class="selectedItemCard empty">
-            <p class="selectedPlaceholder">Choose a menu item to see it here.</p>
-          </div>
-
-          <form id="orderForm" class="orderForm">
-            <label for="quantity">Quantity</label>
-            <input type="number" id="quantity" min="1" value="1" required>
-
-            <input type="hidden" id="foodName" required>
-
-            <button type="submit" class="primaryButton">Add To Order</button>
-          </form>
 
           <section class="orderStackPanel">
             <div class="statusHeader">
-              <p class="eyebrow">Current order</p>
-              <h3>Ready to send</h3>
+              <p class="eyebrow">Current cart</p>
+              <h3>Ready to confirm</h3>
             </div>
             <div id="draftOrderList" class="draftOrderList emptyStack">
               <p class="selectedPlaceholder">No dishes added yet.</p>
             </div>
-            <button type="button" id="submitAllOrdersButton" class="primaryButton secondaryButton" disabled>Finish Order</button>
+            <button type="button" id="submitAllOrdersButton" class="primaryButton secondaryButton" disabled>Checkout And Confirm Order</button>
           </section>
 
           <div id="orderStatus" class="statusBox hidden">
@@ -126,7 +97,7 @@
               <p class="eyebrow">Live status</p>
               <h3>Your submitted orders</h3>
             </div>
-            <p class="statusSummary">Every dish you send will appear here and update automatically if you add more.</p>
+            <p class="statusSummary">Orders placed in this visit appear here. Refreshing the page starts a fresh customer view.</p>
             <div id="submittedOrdersList" class="submittedOrdersList"></div>
           </div>
         </div>

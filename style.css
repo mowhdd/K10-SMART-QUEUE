@@ -16,9 +16,7 @@
   --radius-md: 14px;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -43,6 +41,10 @@ body::before {
   mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 90%);
 }
 
+body.modalOpen {
+  overflow: hidden;
+}
+
 .pageShell {
   width: min(1200px, calc(100% - 32px));
   margin: 0 auto;
@@ -51,9 +53,7 @@ body::before {
   z-index: 1;
 }
 
-.customerPage .pageShell {
-  padding-top: 40px;
-}
+.customerPage .pageShell { padding-top: 40px; }
 
 .eyebrow {
   margin: 0 0 10px;
@@ -64,30 +64,21 @@ body::before {
   color: var(--brand);
 }
 
-h1,
-h2,
-h3,
-h4 {
+h1, h2, h3, h4 {
   margin: 0;
   font-family: "Fraunces", serif;
   line-height: 1.1;
 }
 
-h1 {
-  font-size: clamp(2.4rem, 4vw, 4.2rem);
-}
-
-h2 {
-  font-size: clamp(1.8rem, 2vw, 2.4rem);
-}
+h1 { font-size: clamp(2.4rem, 4vw, 4.2rem); }
+h2 { font-size: clamp(1.8rem, 2vw, 2.4rem); }
 
 p {
   color: var(--text-soft);
   line-height: 1.6;
 }
 
-.heroSection,
-.dashboardHero {
+.heroSection {
   display: grid;
   gap: 24px;
   grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.9fr);
@@ -95,16 +86,13 @@ p {
   margin-bottom: 28px;
 }
 
-.staffPage .dashboardHero {
-  grid-template-columns: minmax(0, 1.25fr) minmax(340px, 0.75fr);
-  align-items: start;
-}
-
 .heroCopy,
 .heroPanel,
-.dashboardHero,
-.dashboardPanel,
-.orderPanel {
+.orderPanel,
+.orderStackPanel,
+.draftOrderItem,
+.submittedOrderCard,
+.itemModalDialog {
   background: var(--surface);
   border: 1px solid rgba(255, 255, 255, 0.7);
   box-shadow: var(--shadow);
@@ -114,8 +102,8 @@ p {
 .heroCopy,
 .heroPanel,
 .orderPanel,
-.dashboardPanel,
-.dashboardHero {
+.orderStackPanel,
+.itemModalDialog {
   border-radius: var(--radius-xl);
 }
 
@@ -142,8 +130,7 @@ p {
   font-size: 1rem;
 }
 
-.heroMeta,
-.dashboardSummary {
+.heroMeta {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -151,82 +138,20 @@ p {
 }
 
 .heroMeta span,
-.summaryChip,
 .menuBadge,
-.filterChip {
+.filterChip,
+.ghostButton,
+.menuActionButton {
   border-radius: 999px;
 }
 
-.heroMeta span,
-.summaryChip {
+.heroMeta span {
   padding: 10px 14px;
   background: rgba(255, 255, 255, 0.7);
   border: 1px solid rgba(200, 92, 44, 0.12);
   color: var(--text);
   font-size: 0.92rem;
   font-weight: 600;
-}
-
-.staffPage .dashboardHero h1 {
-  max-width: 11ch;
-  font-size: clamp(2.2rem, 3.9vw, 3.8rem);
-}
-
-.staffPage .dashboardHero .heroText {
-  max-width: 48ch;
-}
-
-.staffPage .dashboardSummary {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(160px, 1fr));
-  justify-content: end;
-  align-content: start;
-  justify-items: stretch;
-  gap: 16px;
-  margin-top: 8px;
-}
-
-.staffPage .summaryChip {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 74px;
-  min-width: 0;
-  padding: 16px 22px;
-  text-align: center;
-  line-height: 1.35;
-  white-space: normal;
-}
-
-.summaryControl {
-  appearance: none;
-  cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
-}
-
-.summaryControl:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 32px rgba(92, 48, 22, 0.08);
-}
-
-.summaryControl.active {
-  background: linear-gradient(180deg, rgba(200, 92, 44, 0.12), rgba(240, 180, 76, 0.1));
-  border-color: rgba(200, 92, 44, 0.35);
-}
-
-.summaryTitle,
-.summaryValue {
-  display: block;
-}
-
-.summaryTitle {
-  font-weight: 800;
-}
-
-.summaryValue {
-  margin-top: 4px;
-  font-size: 0.84rem;
-  color: var(--text-soft);
 }
 
 .heroPanel {
@@ -266,9 +191,7 @@ p {
 }
 
 .menuSection,
-.orderSection {
-  min-width: 0;
-}
+.orderSection { min-width: 0; }
 
 .sectionHeading {
   display: flex;
@@ -303,20 +226,13 @@ p {
   border-color: var(--brand);
 }
 
-.menuGrid,
-.ordersGrid {
+.menuGrid {
   display: grid;
   gap: 18px;
-}
-
-.menuGrid {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
 .menuCard,
-.selectedItemCard,
-.orderCard,
-.emptyState,
 .draftOrderItem,
 .submittedOrderCard,
 .orderStackPanel {
@@ -328,13 +244,10 @@ p {
 
 .menuCard {
   padding: 20px;
-  text-align: left;
-  cursor: pointer;
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.menuCard:hover,
-.menuCard.selected {
+.menuCard:hover {
   transform: translateY(-3px);
   border-color: rgba(200, 92, 44, 0.45);
   box-shadow: 0 22px 44px rgba(92, 48, 22, 0.14);
@@ -351,27 +264,16 @@ p {
 }
 
 .menuCard h3,
-.selectedItemCard h3,
-.orderCard h3,
-.orderDish h4,
-.emptyState h3,
 .draftOrderItem h4,
 .submittedOrderCard h4 {
   margin-top: 14px;
 }
 
-.menuCard p,
-.selectedItemCard p,
-.emptyState p {
-  margin-bottom: 0;
-}
+.menuCard p { margin-bottom: 0; }
 
 .menuFooter,
-.selectedTop,
-.orderCardTop,
-.orderMetaGrid,
-.submittedOrderTop,
-.draftOrderItem {
+.draftOrderItem,
+.submittedOrderTop {
   display: flex;
   justify-content: space-between;
   gap: 12px;
@@ -384,39 +286,19 @@ p {
   color: var(--brand-deep);
 }
 
-.orderPanel,
-.dashboardPanel,
-.dashboardHero {
-  padding: 28px;
-}
-
-.selectedItemCard {
-  padding: 20px;
-  margin: 20px 0 22px;
-}
-
-.selectedItemCard.empty,
-.draftOrderList.emptyStack {
-  display: grid;
-  place-items: center;
-  min-height: 156px;
-  background: rgba(255, 250, 244, 0.8);
-  border-style: dashed;
-}
-
-.selectedPlaceholder {
-  margin: 0;
-  text-align: center;
-}
-
-.selectedPrice {
+.menuActionButton {
+  border: none;
+  padding: 10px 14px;
+  font: inherit;
   font-weight: 800;
-  color: var(--brand-deep);
+  color: #fff8f2;
+  background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+  cursor: pointer;
 }
 
-.orderForm {
-  display: grid;
-  gap: 12px;
+.orderPanel {
+  padding: 28px;
+  border-radius: var(--radius-xl);
 }
 
 .orderStackPanel {
@@ -431,13 +313,28 @@ p {
   margin-top: 16px;
 }
 
+.draftOrderList.emptyStack {
+  display: grid;
+  place-items: center;
+  min-height: 156px;
+  background: rgba(255, 250, 244, 0.8);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--line);
+}
+
+.selectedPlaceholder {
+  margin: 0;
+  text-align: center;
+}
+
 .draftOrderItem,
 .submittedOrderCard {
   padding: 16px 18px;
 }
 
 .draftOrderMeta,
-.statusSummary {
+.statusSummary,
+.remarksText {
   margin: 4px 0 0;
   color: var(--text-soft);
 }
@@ -447,23 +344,21 @@ p {
   border: 1px solid rgba(200, 92, 44, 0.18);
   background: rgba(255, 250, 244, 0.92);
   color: var(--brand-deep);
-  border-radius: 999px;
   padding: 10px 14px;
   font: inherit;
   font-weight: 700;
   cursor: pointer;
 }
 
-.secondaryButton {
-  margin-top: 16px;
-}
+.secondaryButton { margin-top: 16px; }
 
 label {
   font-weight: 700;
   color: var(--text);
 }
 
-input {
+input,
+textarea {
   width: 100%;
   border: 1px solid rgba(109, 78, 57, 0.16);
   border-radius: 14px;
@@ -473,9 +368,20 @@ input {
   background: #fffdf9;
 }
 
-input:focus {
+textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+input:focus,
+textarea:focus {
   outline: 2px solid rgba(200, 92, 44, 0.18);
   border-color: rgba(200, 92, 44, 0.45);
+}
+
+.orderForm {
+  display: grid;
+  gap: 12px;
 }
 
 .primaryButton {
@@ -512,21 +418,12 @@ input:focus {
   border: 1px solid rgba(240, 180, 76, 0.45);
 }
 
-.statusHeader h3 {
-  margin-top: 4px;
-}
+.statusHeader h3 { margin-top: 4px; }
 
 .queueNumber {
   margin: 0;
   font-weight: 800;
   color: var(--brand-deep);
-}
-
-.orderStatusFood {
-  margin: 8px 0 0;
-  font-family: "Fraunces", serif;
-  font-size: 1.3rem;
-  color: var(--text);
 }
 
 .statusPill {
@@ -538,83 +435,53 @@ input:focus {
   color: #fff8f2;
 }
 
-.preparingPill {
-  background: linear-gradient(135deg, #e19a2d, #c47a16);
+.preparingPill { background: linear-gradient(135deg, #e19a2d, #c47a16); }
+.readyPill { background: linear-gradient(135deg, #2d9a66, #1d7b50); }
+.hidden { display: none; }
+
+.itemModal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
 }
 
-.readyPill {
-  background: linear-gradient(135deg, #2d9a66, #1d7b50);
+.itemModalBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(33, 22, 15, 0.48);
 }
 
-.hidden {
+.itemModalDialog {
+  position: relative;
+  width: min(540px, calc(100% - 24px));
+  margin: 6vh auto 0;
+  padding: 28px;
+  z-index: 1;
+}
+
+.modalCloseButton {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 250, 244, 0.92);
+  color: var(--brand-deep);
+  font: inherit;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.mobileOrderPrompt {
   display: none;
-}
-
-.dashboardLayout {
-  display: block;
-}
-
-.ordersGrid {
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-}
-
-.orderCard {
-  padding: 22px;
-}
-
-.orderCard.actionFocus {
-  border-color: rgba(200, 92, 44, 0.28);
-  box-shadow: 0 18px 44px rgba(92, 48, 22, 0.12);
-}
-
-.orderCardTop {
-  align-items: flex-start;
-}
-
-.orderId,
-.metaLabel {
-  margin: 0 0 6px;
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--text-soft);
-}
-
-.orderMetaGrid {
-  margin: 18px 0;
-  padding: 14px 0;
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-}
-
-.orderDish h4 {
-  font-size: 1.2rem;
-}
-
-.readyButton {
-  margin-top: 18px;
-}
-
-.helperMode .readyButton:not(:disabled) {
-  box-shadow: 0 18px 34px rgba(159, 63, 24, 0.34);
-}
-
-.emptyState {
-  padding: 32px;
-  text-align: center;
 }
 
 @media (max-width: 980px) {
   .heroSection,
-  .dashboardHero,
   .customerLayout {
     grid-template-columns: 1fr;
-  }
-
-  .staffPage .dashboardSummary {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    justify-content: stretch;
   }
 
   .sectionHeading {
@@ -632,48 +499,40 @@ input:focus {
   .heroCopy,
   .heroPanel,
   .orderPanel,
-  .dashboardPanel,
-  .dashboardHero {
+  .orderStackPanel,
+  .itemModalDialog {
     padding: 22px;
     border-radius: 22px;
   }
 
-  .menuGrid,
-  .ordersGrid {
+  .menuGrid {
     grid-template-columns: 1fr;
   }
 
   .heroMeta,
-  .dashboardSummary,
   .categoryFilters {
     gap: 8px;
   }
 
   .heroMeta span,
-  .summaryChip,
   .filterChip {
     width: 100%;
     justify-content: center;
   }
 
   .draftOrderItem,
-  .submittedOrderTop {
+  .submittedOrderTop,
+  .menuFooter {
     align-items: flex-start;
     flex-direction: column;
   }
-}
 
-.mobileOrderPrompt {
-  display: none;
-}
-
-@media (max-width: 640px) {
   .mobileOrderPrompt {
     position: fixed;
     left: 12px;
     right: 12px;
     bottom: 14px;
-    z-index: 50;
+    z-index: 90;
     display: flex;
     align-items: center;
     justify-content: space-between;
