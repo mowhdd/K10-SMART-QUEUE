@@ -1,3 +1,37 @@
+const READY_NOTIFIED_KEY = "readyNotifiedOrderIds";
+
+function getReadyNotifiedIds() {
+  return new Set(JSON.parse(localStorage.getItem(READY_NOTIFIED_KEY) || "[]"));
+}
+
+function saveReadyNotifiedIds(ids) {
+  localStorage.setItem(READY_NOTIFIED_KEY, JSON.stringify([...ids]));
+}
+
+function isReadyToServe(order) {
+  return order.status === "Ready to serve" || order.status === "ready";
+}
+
+function notifyReadyOnce(order) {
+  if (!isReadyToServe(order)) return;
+
+  const notifiedIds = getReadyNotifiedIds();
+  const orderId = String(order.id);
+
+  if (notifiedIds.has(orderId)) return;
+
+  alert(`${order.foodName || "Your order"} is ready to serve!`);
+
+  notifiedIds.add(orderId);
+  saveReadyNotifiedIds(notifiedIds);
+}
+
+function shouldShowOrderOnCustomerPage(order) {
+  const notifiedIds = getReadyNotifiedIds();
+
+  return !(isReadyToServe(order) && notifiedIds.has(String(order.id)));
+}
+
 import {
   db,
   collection,
@@ -262,7 +296,11 @@ function renderDraftOrders() {
   });
 }
 
-function renderSubmittedOrders() {
+orders.forEach(notifyReadyOnce);
+
+const visibleOrders = orders.filter(shouldShowOrderOnCustomerPage);
+
+function renderSubmittedOrders(visibleOrders) {
   const sortedSubmittedOrders = [...submittedOrders].sort((left, right) => {
     const leftDate = left.orderDateKey || "";
     const rightDate = right.orderDateKey || "";
@@ -334,7 +372,7 @@ function subscribeToCustomerOrders() {
       }
     });
 
-    renderSubmittedOrders();
+    renderSubmittedOrders(visibleOrders);
   });
 }
 
