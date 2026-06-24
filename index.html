@@ -9,6 +9,48 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:wght@600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
+
+<div id="mobileOrderPrompt" class="mobileOrderPrompt" aria-live="polite" aria-hidden="true">
+  <span>Order selected</span>
+  <button type="button" id="mobileOrderScrollButton">Scroll down</button>
+</div>
+
+<script>
+  const orderForm = document.getElementById("orderForm");
+  const mobileOrderPrompt = document.getElementById("mobileOrderPrompt");
+  const mobileOrderScrollButton = document.getElementById("mobileOrderScrollButton");
+  const orderSection = document.querySelector(".orderSection");
+  let promptTimer;
+
+  function showMobileOrderPrompt() {
+    if (!window.matchMedia("(max-width: 640px)").matches) return;
+
+    clearTimeout(promptTimer);
+    mobileOrderPrompt.classList.add("isVisible");
+    mobileOrderPrompt.setAttribute("aria-hidden", "false");
+
+    promptTimer = window.setTimeout(() => {
+      mobileOrderPrompt.classList.remove("isVisible");
+      mobileOrderPrompt.setAttribute("aria-hidden", "true");
+    }, 5000);
+  }
+
+  orderForm?.addEventListener("submit", () => {
+    window.setTimeout(showMobileOrderPrompt, 80);
+  });
+
+  mobileOrderScrollButton?.addEventListener("click", () => {
+    clearTimeout(promptTimer);
+    mobileOrderPrompt.classList.remove("isVisible");
+    mobileOrderPrompt.setAttribute("aria-hidden", "true");
+
+    orderSection?.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  });
+</script>
+
 <body class="customerPage">
   <div id="mobileOrderPrompt" class="mobileOrderPrompt" aria-live="polite" aria-hidden="true">
     <span>Added to cart</span>

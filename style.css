@@ -526,13 +526,19 @@ textarea:focus {
     align-items: flex-start;
     flex-direction: column;
   }
+}
 
+.mobileOrderPrompt {
+  display: none;
+}
+
+@media (max-width: 640px) {
   .mobileOrderPrompt {
     position: fixed;
     left: 12px;
     right: 12px;
     bottom: 14px;
-    z-index: 90;
+    z-index: 50;
     display: flex;
     align-items: center;
     justify-content: space-between;
