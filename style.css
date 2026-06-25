@@ -583,3 +583,14 @@ textarea:focus {
     white-space: nowrap;
   }
 }
+
+.submittedItemLine {
+  display: block;
+}
+
+.itemRemark {
+  display: block;
+  margin-top: 4px;
+  color: var(--brand-deep);
+  font-weight: 700;
+}

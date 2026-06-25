@@ -252,11 +252,19 @@ function renderSubmittedOrders() {
       const orderItems = getOrderItems(order);
 
       const itemsText = orderItems
-        .map((item) => {
-          const remarksText = item.remarks ? ` - Remarks: ${item.remarks}` : "";
-          return `${item.foodName} x${Number(item.quantity || 1)}${remarksText}`;
-        })
-        .join(", ");
+  .map((item) => {
+    const remarksText = item.remarks
+      ? `<span class="itemRemark">Remarks: ${item.remarks}</span>`
+      : "";
+
+    return `
+      <span class="submittedItemLine">
+        ${item.foodName} <strong>x${Number(item.quantity || 1)}</strong>
+        ${remarksText}
+      </span>
+    `;
+  })
+  .join("");
 
       return `
         <article class="submittedOrderCard">
@@ -267,7 +275,7 @@ function renderSubmittedOrders() {
             </div>
             <span class="statusPill ${statusClass}">${order.status}</span>
           </div>
-          <p class="draftOrderMeta">${itemsText}</p>
+          <div class="draftOrderMeta">${itemsText}</div>
         </article>
       `;
     })
