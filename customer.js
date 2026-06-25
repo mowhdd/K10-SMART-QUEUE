@@ -52,9 +52,7 @@ let promptTimer;
 const customerSessionId = `customer-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
 function showMobileOrderPrompt() {
-  if (!window.matchMedia("(max-width: 640px)").matches) {
-    return;
-  }
+  if (!window.matchMedia("(max-width: 640px)").matches) return;
 
   clearTimeout(promptTimer);
   mobileOrderPrompt.classList.add("isVisible");
@@ -110,11 +108,7 @@ function renderCategoryFilters() {
   categoryFilters.innerHTML = categories
     .map(
       (category) => `
-        <button
-          type="button"
-          class="filterChip ${category === selectedCategory ? "active" : ""}"
-          data-category="${category}"
-        >
+        <button type="button" class="filterChip ${category === selectedCategory ? "active" : ""}" data-category="${category}">
           ${category}
         </button>
       `
@@ -195,7 +189,7 @@ function renderDraftOrders() {
             <p class="metaLabel">Item ${index + 1}</p>
             <h4>${order.foodName}</h4>
             <p class="draftOrderMeta">Quantity ${order.quantity}</p>
-            ${order.remarks ? `<p class="remarksText">Remarks: ${order.remarks}</p>` : ""}
+            ${order.remarks ? `<p class="draftOrderMeta">Remarks: ${order.remarks}</p>` : ""}
           </div>
           <button type="button" class="ghostButton removeDraftButton" data-index="${index}">Remove</button>
         </article>
@@ -221,7 +215,8 @@ function getOrderItems(order) {
   return [
     {
       foodName: order.foodName || "Unknown item",
-      quantity: Number(order.quantity || 1)
+      quantity: Number(order.quantity || 1),
+      remarks: order.remarks || ""
     }
   ];
 }
@@ -231,16 +226,12 @@ function renderSubmittedOrders() {
     const leftDate = left.orderDateKey || "";
     const rightDate = right.orderDateKey || "";
 
-    if (leftDate !== rightDate) {
-      return rightDate.localeCompare(leftDate);
-    }
+    if (leftDate !== rightDate) return rightDate.localeCompare(leftDate);
 
     const leftSequence = Number(left.dailySequence || 0);
     const rightSequence = Number(right.dailySequence || 0);
 
-    if (leftSequence !== rightSequence) {
-      return leftSequence - rightSequence;
-    }
+    if (leftSequence !== rightSequence) return leftSequence - rightSequence;
 
     const leftCreatedAt = left.createdAt?.seconds || 0;
     const rightCreatedAt = right.createdAt?.seconds || 0;
@@ -256,27 +247,31 @@ function renderSubmittedOrders() {
   orderStatus.classList.remove("hidden");
   submittedOrdersList.innerHTML = sortedSubmittedOrders
     .map((order) => {
-  const statusClass = order.status === "Ready to Serve" ? "readyPill" : "preparingPill";
-  const queueNumber = order.dailySequence ? `Order #${order.dailySequence}` : "Order in queue";
-  const orderItems = getOrderItems(order);
+      const statusClass = order.status === "Ready to Serve" ? "readyPill" : "preparingPill";
+      const queueNumber = order.dailySequence ? `Order #${order.dailySequence}` : "Order in queue";
+      const orderItems = getOrderItems(order);
 
-  const itemsText = orderItems
-    .map((item) => `${item.foodName} x${Number(item.quantity || 1)}`)
-    .join(", ");
+      const itemsText = orderItems
+        .map((item) => {
+          const remarksText = item.remarks ? ` - Remarks: ${item.remarks}` : "";
+          return `${item.foodName} x${Number(item.quantity || 1)}${remarksText}`;
+        })
+        .join(", ");
 
-  return `
-    <article class="submittedOrderCard">
-      <div class="submittedOrderTop">
-        <div>
-          <p class="queueNumber">${queueNumber}</p>
-          <h4>${orderItems.length} item${orderItems.length === 1 ? "" : "s"}</h4>
-        </div>
-        <span class="statusPill ${statusClass}">${order.status}</span>
-      </div>
-      <p class="draftOrderMeta">${itemsText}</p>
-    </article>
-  `;
-})
+      return `
+        <article class="submittedOrderCard">
+          <div class="submittedOrderTop">
+            <div>
+              <p class="queueNumber">${queueNumber}</p>
+              <h4>${orderItems.length} item${orderItems.length === 1 ? "" : "s"}</h4>
+            </div>
+            <span class="statusPill ${statusClass}">${order.status}</span>
+          </div>
+          <p class="draftOrderMeta">${itemsText}</p>
+        </article>
+      `;
+    })
+    .join("");
 }
 
 function subscribeToCustomerOrders() {
@@ -298,7 +293,7 @@ function subscribeToCustomerOrders() {
     submittedOrders.forEach((order) => {
       if (order.status === "Ready to Serve" && !readyNotifications.has(order.id)) {
         readyNotifications.add(order.id);
-        alert(` Your order is ready to serve! Please collect your order at the counter.`);
+        alert("Your order is ready to serve! Please collect your order at the counter.");
       }
     });
 
@@ -309,9 +304,7 @@ function subscribeToCustomerOrders() {
 itemModalForm.addEventListener("submit", (event) => {
   event.preventDefault();
 
-  if (!activeModalItem) {
-    return;
-  }
+  if (!activeModalItem) return;
 
   const quantity = Number(modalQuantity.value);
   const remarks = modalRemarks.value.trim();
@@ -332,15 +325,8 @@ itemModalForm.addEventListener("submit", (event) => {
   showMobileOrderPrompt();
 });
 
-  renderDraftOrders();
-  closeItemModal();
-  showMobileOrderPrompt();
-;
-
 submitAllOrdersButton.addEventListener("click", async () => {
-  if (draftOrders.length === 0) {
-    return;
-  }
+  if (draftOrders.length === 0) return;
 
   const ordersToSubmit = [...draftOrders];
 
@@ -349,13 +335,12 @@ submitAllOrdersButton.addEventListener("click", async () => {
 
   try {
     const orderDateKey = getOrderDateKey();
-
-    // Only reserve ONE queue number for the whole cart
     const dailySequence = await reserveDailySequenceRange(orderDateKey, 1);
 
     const items = ordersToSubmit.map((draftOrder) => ({
       foodName: draftOrder.foodName,
-      quantity: Number(draftOrder.quantity)
+      quantity: Number(draftOrder.quantity),
+      remarks: draftOrder.remarks || ""
     }));
 
     const orderData = {
@@ -373,7 +358,6 @@ submitAllOrdersButton.addEventListener("click", async () => {
 
     draftOrders = [];
     renderDraftOrders();
-    resetMenuSelection();
   } finally {
     submitAllOrdersButton.textContent = "Finish Order";
     submitAllOrdersButton.disabled = draftOrders.length === 0;
@@ -381,6 +365,7 @@ submitAllOrdersButton.addEventListener("click", async () => {
 });
 
 closeItemModalButton.addEventListener("click", closeItemModal);
+
 itemModal.addEventListener("click", (event) => {
   if (event.target instanceof HTMLElement && event.target.dataset.closeModal === "true") {
     closeItemModal();
