@@ -321,18 +321,21 @@ itemModalForm.addEventListener("submit", (event) => {
     return;
   }
 
-  const remarks = document.getElementById("remarks").value.trim();
-
-draftOrders.push({
-  foodName,
-  quantity,
-  remarks
-});
+  draftOrders.push({
+    foodName: activeModalItem.name,
+    quantity,
+    remarks
+  });
 
   renderDraftOrders();
   closeItemModal();
   showMobileOrderPrompt();
 });
+
+  renderDraftOrders();
+  closeItemModal();
+  showMobileOrderPrompt();
+;
 
 submitAllOrdersButton.addEventListener("click", async () => {
   if (draftOrders.length === 0) {
