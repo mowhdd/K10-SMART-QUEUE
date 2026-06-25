@@ -320,36 +320,40 @@ submitAllOrdersButton.addEventListener("click", async () => {
     return;
   }
 
-  const orderDateKey = getOrderDateKey();
   const ordersToSubmit = [...draftOrders];
-  const firstSequence = await reserveDailySequenceRange(orderDateKey, ordersToSubmit.length);
 
   submitAllOrdersButton.disabled = true;
-  submitAllOrdersButton.textContent = "Confirming Order...";
+  submitAllOrdersButton.textContent = "Sending Order...";
 
   try {
-    await Promise.all(
-      ordersToSubmit.map((draftOrder, index) => {
-        const orderData = {
-          foodName: draftOrder.foodName,
-          quantity: Number(draftOrder.quantity),
-          remarks: draftOrder.remarks,
-          status: "Preparing",
-          orderDateKey,
-          dailySequence: firstSequence + index,
-          customerSessionId,
-          createdAt: serverTimestamp()
-        };
+    const orderDateKey = getOrderDateKey();
 
-        return addDoc(collection(db, "orders"), orderData);
-      })
-    );
+    // Only reserve ONE queue number for the whole cart
+    const dailySequence = await reserveDailySequenceRange(orderDateKey, 1);
+
+    const items = ordersToSubmit.map((draftOrder) => ({
+      foodName: draftOrder.foodName,
+      quantity: Number(draftOrder.quantity)
+    }));
+
+    const orderData = {
+      items,
+      itemCount: items.length,
+      totalQuantity: items.reduce((total, item) => total + item.quantity, 0),
+      status: "Preparing",
+      orderDateKey,
+      dailySequence,
+      customerSessionId,
+      createdAt: serverTimestamp()
+    };
+
+    await addDoc(collection(db, "orders"), orderData);
 
     draftOrders = [];
     renderDraftOrders();
-    orderSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+    resetMenuSelection();
   } finally {
-    submitAllOrdersButton.textContent = "Checkout And Confirm Order";
+    submitAllOrdersButton.textContent = "Finish Order";
     submitAllOrdersButton.disabled = draftOrders.length === 0;
   }
 });
