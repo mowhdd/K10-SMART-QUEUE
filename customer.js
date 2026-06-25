@@ -298,7 +298,7 @@ function subscribeToCustomerOrders() {
     submittedOrders.forEach((order) => {
       if (order.status === "Ready to Serve" && !readyNotifications.has(order.id)) {
         readyNotifications.add(order.id);
-        alert(` Your Order is ready to serve! Please collect your order at the counter.`);
+        alert(` Your order is ready to serve! Please collect your order at the counter.`);
       }
     });
 
