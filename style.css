@@ -230,6 +230,7 @@ p {
   display: grid;
   gap: 18px;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: stretch;
 }
 
 .menuCard,
@@ -244,6 +245,10 @@ p {
 
 .menuCard {
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 348px;
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -281,7 +286,8 @@ p {
 }
 
 .menuFooter {
-  margin-top: 18px;
+  margin-top: auto;
+  padding-top: 18px;
   font-weight: 700;
   color: var(--brand-deep);
 }
