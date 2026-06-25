@@ -114,7 +114,7 @@ function getOrderDateKey() {
   }).format(new Date());
 }
 
-async function reserveDailySequenceRange(orderDateKey, orderCount) {
+async function reserveDailySequence(orderDateKey) {
   const counterRef = doc(db, "dailyCounters", orderDateKey);
 
   return runTransaction(db, async (transaction) => {
@@ -122,20 +122,36 @@ async function reserveDailySequenceRange(orderDateKey, orderCount) {
     const lastSequence = counterSnapshot.exists()
       ? Number(counterSnapshot.data().lastSequence || 0)
       : 0;
-    const firstSequence = lastSequence + 1;
-    const lastReservedSequence = lastSequence + orderCount;
+    const nextSequence = lastSequence + 1;
 
     transaction.set(
       counterRef,
       {
-        lastSequence: lastReservedSequence,
+        lastSequence: nextSequence,
         updatedAt: serverTimestamp()
       },
       { merge: true }
     );
 
-    return firstSequence;
+    return nextSequence;
   });
+}
+
+function getOrderItems(order) {
+  if (Array.isArray(order.items) && order.items.length > 0) {
+    return order.items;
+  }
+
+  if (order.foodName) {
+    return [
+      {
+        foodName: order.foodName,
+        quantity: Number(order.quantity || 1)
+      }
+    ];
+  }
+
+  return [];
 }
 
 function renderCategoryFilters() {
@@ -295,16 +311,21 @@ function renderSubmittedOrders() {
       const statusClass = order.status === "Ready to Serve" ? "readyPill" : "preparingPill";
       const queueNumber = order.dailySequence ? `Order #${order.dailySequence}` : "Order in queue";
 
+      const orderItems = getOrderItems(order);
+      const itemSummary = orderItems
+        .map((item) => `${item.foodName} x ${Number(item.quantity || 1)}`)
+        .join(", ");
+
       return `
         <article class="submittedOrderCard">
           <div class="submittedOrderTop">
             <div>
               <p class="queueNumber">${queueNumber}</p>
-              <h4>${order.foodName}</h4>
+              <h4>${orderItems.length > 1 ? `${orderItems.length} items` : orderItems[0]?.foodName || "Order"}</h4>
             </div>
             <span class="statusPill ${statusClass}">${order.status}</span>
           </div>
-          <p class="draftOrderMeta">Quantity ${order.quantity}</p>
+          <p class="draftOrderMeta">${itemSummary}</p>
         </article>
       `;
     })
@@ -330,7 +351,11 @@ function subscribeToCustomerOrders() {
     submittedOrders.forEach((order) => {
       if (order.status === "Ready to Serve" && !readyNotifications.has(order.id)) {
         readyNotifications.add(order.id);
-        alert(`${order.foodName} is ready to serve! Please collect your order at the counter.`);
+        const orderItems = getOrderItems(order);
+        const readyLabel = orderItems.length > 1
+          ? `Order #${order.dailySequence}`
+          : orderItems[0]?.foodName || "Your order";
+        alert(`${readyLabel} is ready to serve! Please collect your order at the counter.`);
       }
     });
 
@@ -368,36 +393,46 @@ submitAllOrdersButton.addEventListener("click", async () => {
     return;
   }
 
-  const orderDateKey = getOrderDateKey();
-  const firstSequence = await reserveDailySequenceRange(orderDateKey, draftOrders.length);
+  // Freeze the current cart items
   const ordersToSubmit = [...draftOrders];
 
   submitAllOrdersButton.disabled = true;
   submitAllOrdersButton.textContent = "Sending Order...";
 
   try {
-    await Promise.all(
-      ordersToSubmit.map((draftOrder, index) => {
-        const orderData = {
-          foodName: draftOrder.foodName,
-          quantity: Number(draftOrder.quantity),
-          status: "Preparing",
-          orderDateKey,
-          dailySequence: firstSequence + index,
-          customerSessionId,
-          createdAt: serverTimestamp()
-        };
+    const orderDateKey = getOrderDateKey();
+    const dailySequence = await reserveDailySequence(orderDateKey);
+    
+    // 1. Properly map ALL draft orders into a clean items array
+    const items = ordersToSubmit.map((draftOrder) => ({
+      foodName: draftOrder.foodName,
+      quantity: Number(draftOrder.quantity)
+    }));
 
-        return addDoc(collection(db, "orders"), orderData);
-      })
-    );
+    // 2. Create ONE single document containing the array
+    const orderData = {
+      items: items, // All items are packed here
+      itemCount: items.length,
+      totalQuantity: items.reduce((total, item) => total + Number(item.quantity || 0), 0),
+      status: "Preparing",
+      orderDateKey,
+      dailySequence,
+      customerSessionId,
+      createdAt: serverTimestamp()
+    };
 
+    // 3. Send it as ONE document to Firestore
+    await addDoc(collection(db, "orders"), orderData);
+
+    // Clear the cart
     draftOrders = [];
     renderDraftOrders();
     resetMenuSelection();
+  } catch (error) {
+    console.error("Order submission failed:", error);
   } finally {
-    submitAllOrdersButton.textContent = "Finish Order";
-    submitAllOrdersButton.disabled = draftOrders.length === 0;
+    submitAllOrdersButton.textContent = "Checkout And Confirm Order";
+    submitAllOrdersButton.disabled = false;
   }
 });
 
