@@ -213,6 +213,19 @@ function renderDraftOrders() {
   });
 }
 
+function getOrderItems(order) {
+  if (Array.isArray(order.items) && order.items.length > 0) {
+    return order.items;
+  }
+
+  return [
+    {
+      foodName: order.foodName || "Unknown item",
+      quantity: Number(order.quantity || 1)
+    }
+  ];
+}
+
 function renderSubmittedOrders() {
   const sortedSubmittedOrders = [...submittedOrders].sort((left, right) => {
     const leftDate = left.orderDateKey || "";
