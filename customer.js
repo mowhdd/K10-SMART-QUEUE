@@ -256,23 +256,27 @@ function renderSubmittedOrders() {
   orderStatus.classList.remove("hidden");
   submittedOrdersList.innerHTML = sortedSubmittedOrders
     .map((order) => {
-      const statusClass = order.status === "Ready to Serve" ? "readyPill" : "preparingPill";
+  const statusClass = order.status === "Ready to Serve" ? "readyPill" : "preparingPill";
+  const queueNumber = order.dailySequence ? `Order #${order.dailySequence}` : "Order in queue";
+  const orderItems = getOrderItems(order);
 
-      return `
-        <article class="submittedOrderCard">
-          <div class="submittedOrderTop">
-            <div>
-              <p class="queueNumber">${order.dailySequence ? `Order #${order.dailySequence}` : "Order in queue"}</p>
-              <h4>${order.foodName}</h4>
-            </div>
-            <span class="statusPill ${statusClass}">${order.status}</span>
-          </div>
-          <p class="draftOrderMeta">Quantity ${order.quantity}</p>
-          ${order.remarks ? `<p class="remarksText">Remarks: ${order.remarks}</p>` : ""}
-        </article>
-      `;
-    })
-    .join("");
+  const itemsText = orderItems
+    .map((item) => `${item.foodName} x${Number(item.quantity || 1)}`)
+    .join(", ");
+
+  return `
+    <article class="submittedOrderCard">
+      <div class="submittedOrderTop">
+        <div>
+          <p class="queueNumber">${queueNumber}</p>
+          <h4>${orderItems.length} item${orderItems.length === 1 ? "" : "s"}</h4>
+        </div>
+        <span class="statusPill ${statusClass}">${order.status}</span>
+      </div>
+      <p class="draftOrderMeta">${itemsText}</p>
+    </article>
+  `;
+})
 }
 
 function subscribeToCustomerOrders() {
