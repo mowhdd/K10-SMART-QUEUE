@@ -11,65 +11,98 @@ import {
 } from "./firebase.js";
 
 const menuItems = [
-  { name: "Nasi Goreng Pattaya", category: "Rice", description: "Fried rice wrapped in a soft omelette with chilli sauce.", price: "RM 12" },
-  { name: "Nasi Lemak Ayam Goreng", category: "Rice", description: "Coconut rice, crispy fried chicken, sambal, egg, and peanuts.", price: "RM 14" },
-  { name: "Nasi Paprik", category: "Rice", description: "Steamed rice with spicy paprik chicken and vegetables.", price: "RM 13" },
-  { name: "Mee Goreng Mamak", category: "Noodles", description: "Wok-fried yellow noodles with tofu, egg, and bold mamak spices.", price: "RM 11" },
-  { name: "Kuey Teow Goreng", category: "Noodles", description: "Flat rice noodles stir-fried with egg, vegetables, and savoury sauce.", price: "RM 11" },
-  { name: "Char Kuey Teow", category: "Noodles", description: "Smoky wok-fried noodles with prawns, chives, and bean sprouts.", price: "RM 13" },
-  { name: "Satay Ayam", category: "Sides", description: "Grilled chicken skewers served with peanut sauce and cucumber.", price: "RM 10" },
-  { name: "Roti Canai", category: "Sides", description: "Flaky flatbread served with dhal curry.", price: "RM 4" },
-  { name: "Teh Tarik Ais", category: "Drinks", description: "Pulled milk tea served cold and refreshing.", price: "RM 4" },
-  { name: "Sirap Limau", category: "Drinks", description: "Rose syrup with lime for a bright sweet-tangy finish.", price: "RM 4" }
+  {
+    name: "Nasi Goreng Pattaya",
+    category: "Rice",
+    description: "Fried rice wrapped in a soft omelette with chilli sauce.",
+    price: "RM 12"
+  },
+  {
+    name: "Nasi Lemak Ayam Goreng ",
+    category: "Rice",
+    description: "Coconut rice, crispy fried chicken, sambal, egg, and peanuts.",
+    price: "RM 14"
+  },
+  {
+    name: "Nasi Paprik",
+    category: "Rice",
+    description: "Steamed rice with spicy paprik chicken and vegetables.",
+    price: "RM 13"
+  },
+  {
+    name: "Mee Goreng Mamak",
+    category: "Noodles",
+    description: "Wok-fried yellow noodles with tofu, egg, and bold mamak spices.",
+    price: "RM 11"
+  },
+  {
+    name: "Kuey Teow Goreng",
+    category: "Noodles",
+    description: "Flat rice noodles stir-fried with egg, vegetables, and savoury sauce.",
+    price: "RM 11"
+  },
+  {
+    name: "Char Kuey Teow",
+    category: "Noodles",
+    description: "Smoky wok-fried noodles with prawns, chives, and bean sprouts.",
+    price: "RM 13"
+  },
+  {
+    name: "Satay Ayam",
+    category: "Sides",
+    description: "Grilled chicken skewers served with peanut sauce and cucumber.",
+    price: "RM 10"
+  },
+  {
+    name: "Roti Canai",
+    category: "Sides",
+    description: "Flaky flatbread served with dhal curry.",
+    price: "RM 4"
+  },
+  {
+    name: "Teh Tarik Ais",
+    category: "Drinks",
+    description: "Pulled milk tea served cold and refreshing.",
+    price: "RM 4"
+  },
+  {
+    name: "Sirap Limau",
+    category: "Drinks",
+    description: "Rose syrup with lime for a bright sweet-tangy finish.",
+    price: "RM 4"
+  }
 ];
 
+const orderForm = document.getElementById("orderForm");
+const orderStatus = document.getElementById("orderStatus");
 const menuGrid = document.getElementById("menuGrid");
 const categoryFilters = document.getElementById("categoryFilters");
+const selectedItemCard = document.getElementById("selectedItemCard");
+const foodNameInput = document.getElementById("foodName");
 const draftOrderList = document.getElementById("draftOrderList");
 const submittedOrdersList = document.getElementById("submittedOrdersList");
 const submitAllOrdersButton = document.getElementById("submitAllOrdersButton");
-const orderStatus = document.getElementById("orderStatus");
-const itemModal = document.getElementById("itemModal");
-const itemModalForm = document.getElementById("itemModalForm");
-const itemModalTitle = document.getElementById("itemModalTitle");
-const itemModalDescription = document.getElementById("itemModalDescription");
-const itemModalPrice = document.getElementById("itemModalPrice");
-const modalQuantity = document.getElementById("modalQuantity");
-const modalRemarks = document.getElementById("modalRemarks");
-const closeItemModalButton = document.getElementById("closeItemModalButton");
-const mobileOrderPrompt = document.getElementById("mobileOrderPrompt");
-const mobileOrderScrollButton = document.getElementById("mobileOrderScrollButton");
-const orderSection = document.querySelector(".orderSection");
 
 let selectedCategory = "All";
+let selectedItemName = "";
 let draftOrders = [];
 let submittedOrders = [];
 let readyNotifications = new Set();
 let customerOrderUnsubscribe = null;
-let activeModalItem = null;
-let promptTimer;
 
-const customerSessionId = `customer-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+const customerSessionId = getCustomerSessionId();
 
-function showMobileOrderPrompt() {
-  if (!window.matchMedia("(max-width: 640px)").matches) {
-    return;
+function getCustomerSessionId() {
+  const storageKey = "selera-kampung-customer-session";
+  const existingSessionId = window.localStorage.getItem(storageKey);
+
+  if (existingSessionId) {
+    return existingSessionId;
   }
 
-  clearTimeout(promptTimer);
-  mobileOrderPrompt.classList.add("isVisible");
-  mobileOrderPrompt.setAttribute("aria-hidden", "false");
-
-  promptTimer = window.setTimeout(() => {
-    mobileOrderPrompt.classList.remove("isVisible");
-    mobileOrderPrompt.setAttribute("aria-hidden", "true");
-  }, 5000);
-}
-
-function hideMobileOrderPrompt() {
-  clearTimeout(promptTimer);
-  mobileOrderPrompt.classList.remove("isVisible");
-  mobileOrderPrompt.setAttribute("aria-hidden", "true");
+  const nextSessionId = `customer-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  window.localStorage.setItem(storageKey, nextSessionId);
+  return nextSessionId;
 }
 
 function getOrderDateKey() {
@@ -89,13 +122,12 @@ async function reserveDailySequence(orderDateKey) {
     const lastSequence = counterSnapshot.exists()
       ? Number(counterSnapshot.data().lastSequence || 0)
       : 0;
-    const firstSequence = lastSequence + 1;
-    const lastReservedSequence = lastSequence + orderCount;
+    const nextSequence = lastSequence + 1;
 
     transaction.set(
       counterRef,
       {
-        lastSequence: lastReservedSequence,
+        lastSequence: nextSequence,
         updatedAt: serverTimestamp()
       },
       { merge: true }
@@ -156,44 +188,59 @@ function renderMenuItems() {
   menuGrid.innerHTML = visibleItems
     .map(
       (item) => `
-        <article class="menuCard" data-item="${item.name}">
+        <button
+          type="button"
+          class="menuCard ${item.name === selectedItemName ? "selected" : ""}"
+          data-item="${item.name}"
+        >
           <span class="menuBadge">${item.category}</span>
           <h3>${item.name}</h3>
           <p>${item.description}</p>
           <div class="menuFooter">
             <span>${item.price}</span>
-            <button type="button" class="menuActionButton" data-item="${item.name}">Select</button>
+            <span>Select</span>
           </div>
-        </article>
+        </button>
       `
     )
     .join("");
 
-  menuGrid.querySelectorAll(".menuActionButton").forEach((button) => {
-    button.addEventListener("click", () => {
-      const item = menuItems.find((menuItem) => menuItem.name === button.dataset.item);
-      openItemModal(item);
+  menuGrid.querySelectorAll(".menuCard").forEach((card) => {
+    card.addEventListener("click", () => {
+      const clickedItem = menuItems.find((item) => item.name === card.dataset.item);
+      selectedItemName = clickedItem.name;
+      foodNameInput.value = clickedItem.name;
+      renderMenuItems();
+      renderSelectedItem(clickedItem);
     });
   });
 }
 
-function openItemModal(item) {
-  activeModalItem = item;
-  itemModalTitle.textContent = item.name;
-  itemModalDescription.textContent = item.description;
-  itemModalPrice.textContent = item.price;
-  modalQuantity.value = 1;
-  modalRemarks.value = "";
-  itemModal.classList.remove("hidden");
-  itemModal.setAttribute("aria-hidden", "false");
-  document.body.classList.add("modalOpen");
+function renderSelectedItem(item) {
+  if (!item) {
+    selectedItemCard.className = "selectedItemCard empty";
+    selectedItemCard.innerHTML = `<p class="selectedPlaceholder">Choose a menu item to see it here.</p>`;
+    return;
+  }
+
+  selectedItemCard.className = "selectedItemCard";
+  selectedItemCard.innerHTML = `
+    <div class="selectedTop">
+      <span class="menuBadge">${item.category}</span>
+      <span class="selectedPrice">${item.price}</span>
+    </div>
+    <h3>${item.name}</h3>
+    <p>${item.description}</p>
+  `;
 }
 
-function closeItemModal() {
-  activeModalItem = null;
-  itemModal.classList.add("hidden");
-  itemModal.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("modalOpen");
+function resetMenuSelection() {
+  orderForm.reset();
+  document.getElementById("quantity").value = 1;
+  selectedItemName = "";
+  foodNameInput.value = "";
+  renderMenuItems();
+  renderSelectedItem(null);
 }
 
 function renderDraftOrders() {
@@ -213,7 +260,6 @@ function renderDraftOrders() {
             <p class="metaLabel">Item ${index + 1}</p>
             <h4>${order.foodName}</h4>
             <p class="draftOrderMeta">Quantity ${order.quantity}</p>
-            ${order.remarks ? `<p class="remarksText">Remarks: ${order.remarks}</p>` : ""}
           </div>
           <button type="button" class="ghostButton removeDraftButton" data-index="${index}">Remove</button>
         </article>
@@ -225,7 +271,8 @@ function renderDraftOrders() {
 
   draftOrderList.querySelectorAll(".removeDraftButton").forEach((button) => {
     button.addEventListener("click", () => {
-      draftOrders.splice(Number(button.dataset.index), 1);
+      const index = Number(button.dataset.index);
+      draftOrders.splice(index, 1);
       renderDraftOrders();
     });
   });
@@ -262,6 +309,7 @@ function renderSubmittedOrders() {
   submittedOrdersList.innerHTML = sortedSubmittedOrders
     .map((order) => {
       const statusClass = order.status === "Ready to Serve" ? "readyPill" : "preparingPill";
+      const queueNumber = order.dailySequence ? `Order #${order.dailySequence}` : "Order in queue";
 
       const orderItems = getOrderItems(order);
       const itemSummary = orderItems
@@ -273,11 +321,11 @@ function renderSubmittedOrders() {
           <div class="submittedOrderTop">
             <div>
               <p class="queueNumber">${queueNumber}</p>
-              <h4>${order.foodName}</h4>
+              <h4>${orderItems.length > 1 ? `${orderItems.length} items` : orderItems[0]?.foodName || "Order"}</h4>
             </div>
             <span class="statusPill ${statusClass}">${order.status}</span>
           </div>
-          <p class="draftOrderMeta">Quantity ${order.quantity}</p>
+          <p class="draftOrderMeta">${itemSummary}</p>
         </article>
       `;
     })
@@ -315,15 +363,16 @@ function subscribeToCustomerOrders() {
   });
 }
 
-itemModalForm.addEventListener("submit", (event) => {
+orderForm.addEventListener("submit", (event) => {
   event.preventDefault();
 
-  if (!activeModalItem) {
+  const foodName = foodNameInput.value;
+  const quantity = Number(document.getElementById("quantity").value);
+
+  if (!foodName) {
+    alert("Please choose a menu item before adding it to your order.");
     return;
   }
-
-  const quantity = Number(modalQuantity.value);
-  const remarks = modalRemarks.value.trim();
 
   if (!quantity || quantity < 1) {
     alert("Please enter a valid quantity.");
@@ -331,14 +380,12 @@ itemModalForm.addEventListener("submit", (event) => {
   }
 
   draftOrders.push({
-    foodName: activeModalItem.name,
-    quantity,
-    remarks
+    foodName,
+    quantity
   });
 
   renderDraftOrders();
-  closeItemModal();
-  showMobileOrderPrompt();
+  resetMenuSelection();
 });
 
 submitAllOrdersButton.addEventListener("click", async () => {
@@ -346,31 +393,33 @@ submitAllOrdersButton.addEventListener("click", async () => {
     return;
   }
 
-  const orderDateKey = getOrderDateKey();
-  const firstSequence = await reserveDailySequenceRange(orderDateKey, draftOrders.length);
   const ordersToSubmit = [...draftOrders];
-  const firstSequence = await reserveDailySequenceRange(orderDateKey, ordersToSubmit.length);
 
   submitAllOrdersButton.disabled = true;
-  submitAllOrdersButton.textContent = "Confirming Order...";
+  submitAllOrdersButton.textContent = "Sending Order...";
 
   try {
-    await Promise.all(
-      ordersToSubmit.map((draftOrder, index) => {
-        const orderData = {
-          foodName: draftOrder.foodName,
-          quantity: Number(draftOrder.quantity),
-          status: "Preparing",
-          orderDateKey,
-          dailySequence: firstSequence + index,
-          customerSessionId,
-          createdAt: serverTimestamp()
-        };
+    const orderDateKey = getOrderDateKey();
+    const dailySequence = await reserveDailySequence(orderDateKey);
+    const items = ordersToSubmit.map((draftOrder) => ({
+      foodName: draftOrder.foodName,
+      quantity: Number(draftOrder.quantity)
+    }));
+    const orderData = {
+      items,
+      itemCount: items.length,
+      totalQuantity: items.reduce((total, item) => total + Number(item.quantity || 0), 0),
+      foodName: items.length === 1 ? items[0].foodName : `${items.length} items`,
+      quantity: items.reduce((total, item) => total + Number(item.quantity || 0), 0),
+      status: "Preparing",
+      orderDateKey,
+      dailySequence,
+      customerSessionId,
+      createdAt: serverTimestamp()
+    };
 
-    // 3. Send it as ONE document to Firestore
     await addDoc(collection(db, "orders"), orderData);
 
-    // Clear the cart
     draftOrders = [];
     renderDraftOrders();
     resetMenuSelection();
@@ -380,20 +429,8 @@ submitAllOrdersButton.addEventListener("click", async () => {
   }
 });
 
-closeItemModalButton.addEventListener("click", closeItemModal);
-itemModal.addEventListener("click", (event) => {
-  if (event.target instanceof HTMLElement && event.target.dataset.closeModal === "true") {
-    closeItemModal();
-  }
-});
-
-mobileOrderScrollButton.addEventListener("click", () => {
-  hideMobileOrderPrompt();
-  orderSection?.scrollIntoView({ behavior: "smooth", block: "start" });
-});
-
 renderCategoryFilters();
 renderMenuItems();
+renderSelectedItem(null);
 renderDraftOrders();
-renderSubmittedOrders();
 subscribeToCustomerOrders();
