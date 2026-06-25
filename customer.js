@@ -188,8 +188,8 @@ function renderDraftOrders() {
           <div>
             <p class="metaLabel">Item ${index + 1}</p>
             <h4>${order.foodName}</h4>
-            <p class="draftOrderMeta">Quantity ${order.quantity}</p>
-            ${order.remarks ? `<p class="draftOrderMeta">Remarks: ${order.remarks}</p>` : ""}
+            <p class="draftOrderMeta"><strong>Quantity:</strong> ${order.quantity}</p>
+            ${order.remarks ? `<p class="draftOrderMeta"><strong>Remarks:</strong> ${order.remarks}</p>` : ""}
           </div>
           <button type="button" class="ghostButton removeDraftButton" data-index="${index}">Remove</button>
         </article>
